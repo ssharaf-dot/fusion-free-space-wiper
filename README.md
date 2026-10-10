@@ -96,6 +96,20 @@ You can also open the folder in Xcode (it reads `Package.swift`).
 - `fsync`/`F_FULLFSYNC` flush buffers; they don't force specific physical SSD cells to be rewritten.
 - The result is reported as **completed with limitations**, never a certificate.
 
+## Credits & acknowledgements
+
+This app bundles two tools from the **TestDisk & PhotoRec** project by **Christophe Grenier
+/ CGSecurity** — the long-standing, free, open-source standard for data recovery. Huge
+thanks to them; this suite would not exist without their work.
+
+- Project home: https://www.cgsecurity.org/wiki/TestDisk
+- Source & downloads: https://www.cgsecurity.org/wiki/TestDisk_Download
+- GitHub mirror: https://github.com/cgsecurity/testdisk
+
+PhotoRec and TestDisk are redistributed **unmodified** under the GNU GPL v2+. See
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for versions, the pinned checksum, and how
+to obtain their corresponding source.
+
 ## License
 
 **GNU GPL v2 or later** ([LICENSE](LICENSE)) © 2026 Sunaz Sharaf. Because this app bundles

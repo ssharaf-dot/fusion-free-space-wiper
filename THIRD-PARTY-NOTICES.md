@@ -6,6 +6,7 @@ This application bundles **TestDisk & PhotoRec** by Christophe Grenier / CGSecur
 - Version bundled: **7.2** (macOS Intel x86_64 build)
 - Upstream: https://www.cgsecurity.org/wiki/TestDisk
 - Source download: https://www.cgsecurity.org/wiki/TestDisk_Download
+- GitHub mirror: https://github.com/cgsecurity/testdisk
 - License: **GNU General Public License v2 or later** (see `LICENSE`)
 - Bundled binary (official release) SHA-256 of
   `testdisk-7.2.mac_intel_x86_64.tar.bz2`:
