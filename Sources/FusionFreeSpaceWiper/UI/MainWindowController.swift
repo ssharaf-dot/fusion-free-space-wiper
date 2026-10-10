@@ -34,6 +34,20 @@ final class MainWindowController: NSWindowController, FreeSpaceWiperDelegate, NS
     private var activeRunIsTest = false
     private var currentTestSize: TestSize = .mb100
 
+    // Suite (three tools)
+    private enum SuiteTool: Int { case fusion = 0, photorec, testdisk }
+    private var currentTool: SuiteTool = .fusion
+    private var suiteTabs: NSSegmentedControl!
+    private var guidedBar: NSView!
+    private let photorec = PhotoRecRunner()
+    private let testdisk = TestDiskRunner()
+
+    // PhotoRec / TestDisk screen state
+    private var auditDestination: String?
+    private var auditImagePath: String?
+    private let auditSpinner = NSProgressIndicator()
+    private var auditRunning = false
+
     // Chrome
     private let stepIndicator = StepIndicator()
     private var homeButton: FancyButton!
@@ -74,15 +88,35 @@ final class MainWindowController: NSWindowController, FreeSpaceWiperDelegate, NS
         let content = NSView()
         content.wantsLayer = true
 
-        // Top bar with vibrancy for a modern frosted look.
+        // --- Suite tab strip (Fusion · PhotoRec · TestDisk) ---
+        let suiteStrip = NSVisualEffectView()
+        suiteStrip.material = .titlebar
+        suiteStrip.blendingMode = .withinWindow
+        suiteStrip.state = .active
+        suiteStrip.translatesAutoresizingMaskIntoConstraints = false
+
+        suiteTabs = NSSegmentedControl(labels: ["① Fusion — Wipe", "② PhotoRec — Audit", "③ TestDisk — Recover"],
+                                       trackingMode: .selectOne, target: self, action: #selector(suiteTabChanged))
+        suiteTabs.translatesAutoresizingMaskIntoConstraints = false
+        suiteTabs.selectedSegment = 0
+        suiteTabs.segmentStyle = .texturedRounded
+        suiteTabs.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        suiteStrip.addSubview(suiteTabs)
+        NSLayoutConstraint.activate([
+            suiteTabs.centerXAnchor.constraint(equalTo: suiteStrip.centerXAnchor),
+            suiteTabs.centerYAnchor.constraint(equalTo: suiteStrip.centerYAnchor),
+            suiteTabs.leadingAnchor.constraint(greaterThanOrEqualTo: suiteStrip.leadingAnchor, constant: 16),
+        ])
+
+        // --- Guided bar (Home · steps · Advanced) — only for the Fusion tool ---
         let bar = NSVisualEffectView()
         bar.material = .headerView
         bar.blendingMode = .withinWindow
         bar.state = .active
         bar.translatesAutoresizingMaskIntoConstraints = false
+        guidedBar = bar
 
-        homeButton = FancyButton("􀎞 Home", kind: .ghost, target: self, action: #selector(goHomeAction))
-        homeButton.title = "Home"
+        homeButton = FancyButton("Home", kind: .ghost, target: self, action: #selector(goHomeAction))
         homeButton.toolTip = "Return to the start screen"
         advancedButton = FancyButton("Advanced", kind: .ghost, target: self, action: #selector(goAdvancedAction))
         advancedButton.toolTip = "Reports, diagnostics and leftover-file cleanup"
@@ -96,27 +130,49 @@ final class MainWindowController: NSWindowController, FreeSpaceWiperDelegate, NS
             barStack.trailingAnchor.constraint(equalTo: bar.trailingAnchor, constant: -16),
             barStack.centerYAnchor.constraint(equalTo: bar.centerYAnchor),
         ])
-        // keep step indicator centered by letting it stretch
-        barStack.setCustomSpacing(12, after: homeButton)
 
         scroll.hasVerticalScroller = true
         scroll.drawsBackground = false
         scroll.translatesAutoresizingMaskIntoConstraints = false
 
+        content.addSubview(suiteStrip)
         content.addSubview(bar)
         content.addSubview(scroll)
         window.contentView = content
         NSLayoutConstraint.activate([
+            suiteStrip.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            suiteStrip.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            suiteStrip.topAnchor.constraint(equalTo: content.topAnchor),
+            suiteStrip.heightAnchor.constraint(equalToConstant: 48),
             bar.leadingAnchor.constraint(equalTo: content.leadingAnchor),
             bar.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            bar.topAnchor.constraint(equalTo: content.topAnchor),
-            bar.heightAnchor.constraint(equalToConstant: 56),
+            bar.topAnchor.constraint(equalTo: suiteStrip.bottomAnchor),
             scroll.leadingAnchor.constraint(equalTo: content.leadingAnchor),
             scroll.trailingAnchor.constraint(equalTo: content.trailingAnchor),
             scroll.topAnchor.constraint(equalTo: bar.bottomAnchor),
             scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
         ])
+        guidedBarHeight = bar.heightAnchor.constraint(equalToConstant: 52)
+        guidedBarHeight.isActive = true
         buildRunningView()
+    }
+    private var guidedBarHeight: NSLayoutConstraint!
+
+    // MARK: - Suite switching
+
+    @objc private func suiteTabChanged() {
+        selectTool(SuiteTool(rawValue: suiteTabs.selectedSegment) ?? .fusion)
+    }
+    private func selectTool(_ tool: SuiteTool) {
+        currentTool = tool
+        suiteTabs.selectedSegment = tool.rawValue
+        guidedBar.isHidden = (tool != .fusion)
+        guidedBarHeight.constant = (tool == .fusion) ? 52 : 0
+        switch tool {
+        case .fusion:   goHome()
+        case .photorec: showPhotoRecScreen()
+        case .testdisk: showTestDiskScreen()
+        }
     }
 
     /// Host a screen's content in the scroll view with padding, flowing top-down.
@@ -200,7 +256,12 @@ final class MainWindowController: NSWindowController, FreeSpaceWiperDelegate, NS
         let hist = UI.label("Pre-wipe tests:   " + TestSize.allCases.map { h.summaryLine($0) }.joined(separator: "      "),
                             size: 11, color: .secondaryLabelColor)
 
-        host(UI.vstack([heading, sub, statusCard, choices, note, hist], spacing: 16))
+        let suite360 = card(UI.vstack([
+            UI.label("A full 360° view of your data", size: 13, bold: true),
+            UI.multiline("①  Fusion wipes free space clean   ·   ②  PhotoRec audits what's still recoverable   ·   ③  TestDisk recovers partitions.  Switch tools with the tabs at the top.", size: 12),
+        ], spacing: 4), padding: 12)
+
+        host(UI.vstack([suite360, heading, sub, statusCard, choices, note, hist], spacing: 16))
     }
 
     @objc private func pickDisk() {
@@ -391,35 +452,47 @@ final class MainWindowController: NSWindowController, FreeSpaceWiperDelegate, NS
 
     // MARK: - RUNNING screen (shared)
 
+    private let runETAHero = UI.label("—", size: 40, bold: true)
     private func buildRunningView() {
         runSpinner.style = .spinning
         runSpinner.controlSize = .small
         runSpinner.translatesAutoresizingMaskIntoConstraints = false
         runBlockMap.translatesAutoresizingMaskIntoConstraints = false
-        runBlockMap.heightAnchor.constraint(equalToConstant: 132).isActive = true
+        runBlockMap.heightAnchor.constraint(equalToConstant: 180).isActive = true
 
         runPauseBtn = FancyButton("Pause", kind: .ghost, target: self, action: #selector(pauseRun))
         runResumeBtn = FancyButton("Resume", kind: .ghost, target: self, action: #selector(resumeRun))
         runStopBtn = FancyButton("Stop", kind: .danger, target: self, action: #selector(stopRun))
 
-        let statsRow = UI.hstack([runWrittenTile, runSpeedTile, runElapsedTile, runRemainingTile], spacing: 28, alignment: .top)
+        // Hero: giant % on the left, time remaining on the right.
+        runPercent.font = NSFont.systemFont(ofSize: 56, weight: .bold)
+        runETAHero.font = NSFont.systemFont(ofSize: 40, weight: .bold)
+        let pctCol = UI.vstack([UI.label("PROGRESS", size: 10, color: .secondaryLabelColor), runPercent], spacing: 0)
+        let etaCol = UI.vstack([UI.label("TIME REMAINING", size: 10, color: .secondaryLabelColor), runETAHero], spacing: 0)
+        etaCol.alignment = .trailing
+        let hero = UI.hstack([pctCol, NSView(), etaCol], spacing: 20, alignment: .top)
+
+        // Stat cards row (written · speed · elapsed).
+        let statsRow = UI.hstack([
+            card(runWrittenTile, padding: 12), card(runSpeedTile, padding: 12), card(runElapsedTile, padding: 12),
+        ], spacing: 12, alignment: .top)
+        statsRow.distribution = .fillEqually
 
         runningView = UI.vstack([
             runTitle,
             UI.hstack([runSpinner, runStage], spacing: 8),
-            runPercent,
+            hero,
             runCaption,
             runBlockMap,
             legendRow(),
             statsRow,
             UI.hstack([runPauseBtn, runResumeBtn, runStopBtn], spacing: 10),
-        ], spacing: 10)
+        ], spacing: 14)
     }
     // Stat tiles as stored views so we can update them.
     private lazy var runWrittenTile = statTile("Written", "—")
     private lazy var runSpeedTile = statTile("Current speed", "—")
     private lazy var runElapsedTile = statTile("Elapsed", "—")
-    private lazy var runRemainingTile = statTile("Est. remaining", "—")
 
     private func legendRow() -> NSView {
         func chip(_ c: NSColor, _ t: String) -> NSView {
@@ -447,7 +520,7 @@ final class MainWindowController: NSWindowController, FreeSpaceWiperDelegate, NS
         setTile(runWrittenTile, key: "Written", value: "—")
         setTile(runSpeedTile, key: "Current speed", value: "—")
         setTile(runElapsedTile, key: "Elapsed", value: "00:00")
-        setTile(runRemainingTile, key: "Est. remaining", value: "Calculating…")
+        runETAHero.stringValue = "Calculating…"
         setSteps(isTest ? testSteps : wipeSteps, isTest ? 2 : 3)
         sleepAssertion.begin(reason: "Overwriting free space")
         if let rv = runningView { host(rv) }
@@ -483,9 +556,9 @@ final class MainWindowController: NSWindowController, FreeSpaceWiperDelegate, NS
         }
         setTile(runElapsedTile, key: "Elapsed", value: ByteText.duration(p.elapsed))
         if p.phase == .writing {
-            setTile(runRemainingTile, key: "Est. remaining", value: p.estimatedRemaining == nil ? "Calculating…" : ByteText.duration(p.estimatedRemaining))
+            runETAHero.stringValue = p.estimatedRemaining == nil ? "Calculating…" : ByteText.duration(p.estimatedRemaining)
         } else {
-            setTile(runRemainingTile, key: "Est. remaining", value: "—")
+            runETAHero.stringValue = "—"
         }
     }
 
@@ -658,6 +731,172 @@ final class MainWindowController: NSWindowController, FreeSpaceWiperDelegate, NS
                  else { try self.reporter.htmlString(report).data(using: .utf8)?.write(to: url) } }
             catch { self.alert("Save failed", "\(error)") }
         }
+    }
+
+    // MARK: - PhotoRec tab (audit / recover)
+
+    private let auditResultHost = NSView()
+    private func showPhotoRecScreen() {
+        let heading = UI.title("PhotoRec — Audit what's recoverable")
+        let intro = UI.multiline("Runs the bundled PhotoRec (the standard open-source recovery engine) READ-ONLY against a disk, and reconstructs any files it can find into a destination you choose — exactly what someone attempting recovery would get. It reports types and counts; it never modifies the source disk.", maxWidth: 820)
+        let caveat = card(UI.multiline("Honest limits: this reads host-accessible space only. SSD/Fusion controllers keep hidden cells no software can read, so a clean result is NOT proof nothing is recoverable. A whole-disk scan can take a long time and will ask for your administrator password.", size: 12), padding: 12)
+
+        let src = selectedVolume
+        let srcLabel = UI.label(src != nil ? "Source: \(src!.name) — \(src!.mountPath)" : "Source: (no disk selected)", size: 13, bold: true)
+        let pickDiskBtn = FancyButton("Change disk", kind: .ghost, target: self, action: #selector(pickDiskForTools))
+        let pickImageBtn = FancyButton("Audit a disk image…", kind: .ghost, target: self, action: #selector(pickAuditImage))
+        let destBtn = FancyButton("Choose where to save recovered files…", kind: .ghost, target: self, action: #selector(pickAuditDestination))
+        let destLabel = UI.label(auditDestination != nil ? "Save to: \(auditDestination!)" : "Save to: (choose a destination — must NOT be the source disk)",
+                                 size: 12, color: auditDestination != nil ? .labelColor : Palette.amber)
+        if let img = auditImagePath { srcLabel.stringValue = "Source image: \(img)" }
+
+        auditSpinner.style = .spinning; auditSpinner.controlSize = .small
+        auditSpinner.translatesAutoresizingMaskIntoConstraints = false
+        let startBtn = FancyButton(auditRunning ? "Scanning…" : "Start Audit", kind: .green, target: self, action: #selector(startAudit))
+        startBtn.isEnabled = !auditRunning && auditDestination != nil && (selectedVolume != nil || auditImagePath != nil)
+
+        auditResultHost.translatesAutoresizingMaskIntoConstraints = false
+        let rows: [NSView] = [heading, intro, caveat, NSBox.separator(),
+                              srcLabel, UI.hstack([pickDiskBtn, pickImageBtn]),
+                              destBtn, destLabel, NSBox.separator(),
+                              UI.hstack([startBtn, auditSpinner]),
+                              auditResultHost]
+        host(UI.vstack(rows, spacing: 12))
+        auditSpinner.isHidden = !auditRunning
+        if auditRunning { auditSpinner.startAnimation(nil) }
+    }
+
+    @objc private func pickDiskForTools() {
+        reloadVolumes()
+        let a = NSAlert(); a.messageText = "Choose a disk"
+        a.informativeText = "Pick the disk to work with."
+        let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 360, height: 26))
+        for v in volumes { popup.addItem(withTitle: "\(v.name) — \(v.mountPath)") }
+        if let idx = volumes.firstIndex(where: { $0.mountPath == selectedVolume?.mountPath }) { popup.selectItem(at: idx) }
+        a.accessoryView = popup
+        a.addButton(withTitle: "Use"); a.addButton(withTitle: "Cancel")
+        if a.runModal() == .alertFirstButtonReturn, popup.indexOfSelectedItem >= 0, popup.indexOfSelectedItem < volumes.count {
+            var v = volumes[popup.indexOfSelectedItem]; inspector.enrichDiagnostics(&v); selectedVolume = v; auditImagePath = nil
+            applyRecommendedReserve(for: v)
+            if currentTool == .photorec { showPhotoRecScreen() } else if currentTool == .testdisk { showTestDiskScreen() } else { goHome() }
+        }
+    }
+    @objc private func pickAuditImage() {
+        let p = NSOpenPanel(); p.canChooseFiles = true; p.canChooseDirectories = false; p.allowsMultipleSelection = false
+        p.allowedFileTypes = ["dmg", "img", "iso", "dd", "raw", "sparseimage"]
+        p.message = "Choose a disk image to audit (read-only)."
+        if p.runModal() == .OK, let u = p.url { auditImagePath = u.path; selectedVolume = nil; showPhotoRecScreen() }
+    }
+    @objc private func pickAuditDestination() {
+        let p = NSOpenPanel(); p.canChooseFiles = false; p.canChooseDirectories = true; p.canCreateDirectories = true
+        p.message = "Choose a folder to save recovered files (not the source disk)."
+        if p.runModal() == .OK, let u = p.url { auditDestination = u.path; showPhotoRecScreen() }
+    }
+
+    @objc private func startAudit() {
+        guard let dest = auditDestination else { return }
+        let target: String; let isDevice: Bool
+        if let img = auditImagePath { target = img; isDevice = false }
+        else if let v = selectedVolume {
+            guard let raw = POSIX.rawDeviceNode(forPath: v.mountPath) else { alert("Can't find device", "Could not resolve the device node for \(v.name)."); return }
+            // Safety: destination must not be on the source volume.
+            if let destStat = POSIX.statfsFor(path: dest), let srcStat = POSIX.statfsFor(path: v.mountPath), destStat.mountedOn == srcStat.mountedOn {
+                alert("Choose a different destination", "Recovered files must be saved to a DIFFERENT disk than the one being scanned. Pick an external drive or another volume.")
+                return
+            }
+            target = raw; isDevice = true
+        } else { return }
+
+        auditRunning = true
+        showPhotoRecScreen()
+        setAuditResult(UI.multiline("Scanning \(target)…\n\(isDevice ? "You'll be asked for your administrator password. " : "")This can take a long time — PhotoRec reads the whole disk.", size: 13))
+        photorec.audit(target: target, isDevice: isDevice, destination: dest) { [weak self] summary in
+            guard let self = self else { return }
+            self.auditRunning = false
+            self.showPhotoRecScreen()
+            self.presentAuditSummary(summary)
+        }
+    }
+
+    private func setAuditResult(_ view: NSView) {
+        auditResultHost.subviews.forEach { $0.removeFromSuperview() }
+        view.translatesAutoresizingMaskIntoConstraints = false
+        auditResultHost.addSubview(view)
+        NSLayoutConstraint.activate([
+            view.leadingAnchor.constraint(equalTo: auditResultHost.leadingAnchor),
+            view.trailingAnchor.constraint(lessThanOrEqualTo: auditResultHost.trailingAnchor),
+            view.topAnchor.constraint(equalTo: auditResultHost.topAnchor),
+            view.bottomAnchor.constraint(equalTo: auditResultHost.bottomAnchor),
+        ])
+    }
+    private func presentAuditSummary(_ s: AuditSummary) {
+        if let err = s.error { setAuditResult(card(UI.multiline("Audit did not complete: \(err)", size: 13, color: Palette.red))); return }
+        if s.cancelled { setAuditResult(UI.multiline("Audit cancelled (admin prompt dismissed).", size: 13, color: Palette.amber)); return }
+        var rows: [NSView] = []
+        let big = UI.label(s.totalFiles == 0 ? "No recoverable files found in reachable space" : "\(s.totalFiles) recoverable file(s) found",
+                           size: 18, bold: true, color: s.totalFiles == 0 ? Palette.green : Palette.red)
+        rows.append(big)
+        rows.append(UI.label("Recovered to: \(s.destination)  ·  \(ByteText.format(s.bytesRecovered))", size: 12, color: .secondaryLabelColor))
+        if !s.perType.isEmpty {
+            var lines: [NSView] = [UI.label("By type:", size: 12, bold: true)]
+            for t in s.perType.prefix(16) { lines.append(UI.label("  \(t.ext) — \(t.count)", size: 12)) }
+            rows.append(card(UI.vstack(lines, spacing: 3)))
+        }
+        rows.append(UI.multiline(s.totalFiles == 0
+            ? "Nothing was carved from the host-accessible space — reassuring, but NOT proof of irrecoverability (SSD-hidden cells, snapshots)."
+            : "These are files a recovery tool could reconstruct. Review them in the destination folder. To reduce this, run a Fusion free-space wipe, or for guarantees use FileVault / full erase.",
+            size: 12))
+        setAuditResult(UI.vstack(rows, spacing: 10))
+    }
+
+    // MARK: - TestDisk tab (recover)
+
+    private let testdiskOutputHost = NSView()
+    private func showTestDiskScreen() {
+        let heading = UI.title("TestDisk — Recover partitions")
+        let intro = UI.multiline("Runs the bundled TestDisk (same project as PhotoRec) to analyse a disk's partitions READ-ONLY. For hands-on partition repair / undelete, launch the full interactive TestDisk in Terminal — it's a guided, keyboard-driven tool.", maxWidth: 820)
+        let src = selectedVolume
+        let srcLabel = UI.label(src != nil ? "Disk: \(src!.name) — \(src!.mountPath)" : "Disk: (none selected)", size: 13, bold: true)
+        let pickBtn = FancyButton("Change disk", kind: .ghost, target: self, action: #selector(pickDiskForTools))
+        let analyzeBtn = FancyButton("Analyze partitions (read-only)", kind: .primary, target: self, action: #selector(analyzeTestDisk))
+        let launchBtn = FancyButton("Open advanced recovery in Terminal…", kind: .ghost, target: self, action: #selector(launchTestDisk))
+        testdiskOutputHost.translatesAutoresizingMaskIntoConstraints = false
+        host(UI.vstack([heading, intro, NSBox.separator(), srcLabel, UI.hstack([pickBtn]),
+                        UI.hstack([analyzeBtn, launchBtn]), NSBox.separator(), testdiskOutputHost], spacing: 12))
+    }
+    @objc private func analyzeTestDisk() {
+        guard let v = selectedVolume else { alert("No disk", "Choose a disk first."); return }
+        guard let raw = POSIX.rawDeviceNode(forPath: v.mountPath) else { alert("Can't find device", "Could not resolve the device node."); return }
+        setTestDiskOutput(UI.multiline("Analysing \(raw)… you'll be asked for your administrator password.", size: 13))
+        testdisk.listPartitions(target: raw, isDevice: true) { [weak self] text in
+            guard let self = self else { return }
+            let (scroll, tv) = UI.logView(); tv.string = text
+            scroll.heightAnchor.constraint(equalToConstant: 300).isActive = true
+            self.setTestDiskOutput(scroll)
+        }
+    }
+    @objc private func launchTestDisk() {
+        guard let v = selectedVolume, let raw = POSIX.rawDeviceNode(forPath: v.mountPath),
+              let cmd = testdisk.interactiveCommand(target: raw) else { alert("Unavailable", "Select a disk first."); return }
+        let a = NSAlert(); a.messageText = "Open TestDisk in Terminal"
+        a.informativeText = "Terminal will open and run:\n\n\(cmd)\n\nTestDisk is interactive and powerful — follow its on-screen menus. It can modify partitions, so proceed carefully."
+        a.addButton(withTitle: "Open Terminal"); a.addButton(withTitle: "Cancel")
+        if a.runModal() == .alertFirstButtonReturn {
+            let script = "tell application \"Terminal\" to do script \"\(cmd.replacingOccurrences(of: "\"", with: "\\\""))\"\ntell application \"Terminal\" to activate"
+            let p = Process(); p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript"); p.arguments = ["-e", script]
+            try? p.run()
+        }
+    }
+    private func setTestDiskOutput(_ view: NSView) {
+        testdiskOutputHost.subviews.forEach { $0.removeFromSuperview() }
+        view.translatesAutoresizingMaskIntoConstraints = false
+        testdiskOutputHost.addSubview(view)
+        NSLayoutConstraint.activate([
+            view.leadingAnchor.constraint(equalTo: testdiskOutputHost.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: testdiskOutputHost.trailingAnchor),
+            view.topAnchor.constraint(equalTo: testdiskOutputHost.topAnchor),
+            view.bottomAnchor.constraint(equalTo: testdiskOutputHost.bottomAnchor),
+        ])
     }
 
     // MARK: - Launch-time stale prompt

@@ -52,6 +52,22 @@ public enum POSIX {
                                mountedOn: mnt)
     }
 
+    /// The device node backing a mount path, e.g. "/dev/disk1s2". Returns nil on failure.
+    public static func deviceNode(forPath path: String) -> String? {
+        var st = statfs()
+        guard path.withCString({ statfs($0, &st) }) == 0 else { return nil }
+        let dev = withUnsafePointer(to: st.f_mntfromname) { ptr -> String in
+            ptr.withMemoryRebound(to: CChar.self, capacity: Int(MAXPATHLEN)) { String(cString: $0) }
+        }
+        return dev.hasPrefix("/dev/") ? dev : nil
+    }
+
+    /// The raw device node ("/dev/rdiskXsY") for faster whole-device reads.
+    public static func rawDeviceNode(forPath path: String) -> String? {
+        guard let d = deviceNode(forPath: path) else { return nil }
+        return d.replacingOccurrences(of: "/dev/disk", with: "/dev/rdisk")
+    }
+
     /// Is a process alive? Uses kill(pid, 0). ESRCH => not alive.
     public static func isProcessAlive(_ pid: Int32) -> Bool {
         if pid <= 0 { return false }

@@ -1,13 +1,20 @@
 # Fusion Free Space Wiper
 
-A small, honest macOS app that overwrites the **empty (free) space** on a disk so that
-files you previously deleted are **harder to recover** — without touching any of your
-current files, apps, or macOS.
+A small, honest macOS app that gives you a **full 360° view of your data** on older Macs,
+in three tabs:
+
+1. **Fusion — Wipe:** overwrite the **empty (free) space** on a disk so previously‑deleted
+   files are harder to recover, without touching your current files.
+2. **PhotoRec — Audit:** run the bundled PhotoRec recovery engine (read‑only) to see **what
+   is still recoverable** from a disk.
+3. **TestDisk — Recover:** analyse and recover **partitions** with the bundled TestDisk.
 
 Built for older **Intel Macs with a hard drive or Fusion Drive** (it was made for a
 Late‑2012 iMac on macOS Catalina), where Apple removed the easy built‑in way to do this.
+Everything is **self‑contained in one DMG** — nothing to install.
 
-> **An [Ethos](https://github.com/ssharaf-dot) tool. Zero dependencies. No network. No telemetry.**
+> **An [Ethos](https://github.com/ssharaf-dot) tool. No network. No telemetry. Local only.**
+> Bundles **PhotoRec & TestDisk** © CGSecurity (GPL).
 
 ---
 
@@ -91,5 +98,7 @@ You can also open the folder in Xcode (it reads `Package.swift`).
 
 ## License
 
-[MIT](LICENSE) © 2026 Sunaz Sharaf. No warranty. Overwriting free space causes SSD wear and
-heat and takes time proportional to free space and pass count.
+**GNU GPL v2 or later** ([LICENSE](LICENSE)) © 2026 Sunaz Sharaf. Because this app bundles
+PhotoRec/TestDisk (GPL), the combined work is distributed under the GPL — see
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). No warranty. Overwriting free space causes
+SSD wear and heat and takes time proportional to free space and pass count.

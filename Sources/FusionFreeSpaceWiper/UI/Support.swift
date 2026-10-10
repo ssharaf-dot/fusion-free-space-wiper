@@ -193,7 +193,7 @@ enum AboutPanel {
         let credits = NSMutableAttributedString()
         let body: [(String, String)] = [
             ("Developed by", "Sunaz Sharaf"),
-            ("Dependencies", "None — no third-party code"),
+            ("Recovery engine", "PhotoRec & TestDisk © CGSecurity (GPL)"),
             ("Privacy", "No network · No telemetry · Local only"),
             ("Source", "github.com/ssharaf-dot/fusion-free-space-wiper"),
         ]
@@ -212,7 +212,7 @@ enum AboutPanel {
         NSApplication.shared.orderFrontStandardAboutPanel(options: [
             .applicationName: AppInfo.name,
             .applicationVersion: AppInfo.version,
-            NSApplication.AboutPanelOptionKey(rawValue: "Copyright"): "© 2026 Sunaz Sharaf · MIT License",
+            NSApplication.AboutPanelOptionKey(rawValue: "Copyright"): "© 2026 Sunaz Sharaf · GNU GPL v2 or later",
             .credits: credits,
         ])
         NSApp.activate(ignoringOtherApps: true)
