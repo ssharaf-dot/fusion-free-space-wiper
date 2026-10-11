@@ -248,12 +248,12 @@ final class PreferencesWindowController: NSWindowController {
         soundCheck.state = prefs.finishSound ? .on : .off
 
         let rows = UI.vstack([
-            UI.hstack([UI.label("Default test size:"), sizePopup]),
-            UI.hstack([UI.label("Default safety reserve (GiB):"), reserveField]),
+            UI.hstack([UI.body("Default test size:"), sizePopup]),
+            UI.hstack([UI.body("Default safety reserve (GB):"), reserveField]),
             confirmCheck, soundCheck,
-            UI.multiline("Leave the reserve blank to use the recommended value for each disk. The reserve never drops below 10 GiB.", size: 11),
+            UI.small("Leave the reserve blank to use the recommended value for each disk. The reserve never drops below 10 GB."),
         ], spacing: 14)
-        let save = FancyButton("Save", kind: .primary, target: self, action: #selector(save))
+        let save = PillButton("Save", style: .primary, target: self, action: #selector(save))
         let container = UI.vstack([rows, UI.hstack([NSView(), save])], spacing: 18)
         let content = NSView()
         content.addSubview(container)

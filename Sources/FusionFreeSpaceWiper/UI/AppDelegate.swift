@@ -14,6 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
+        // Light-only design (§0): force Aqua so Catalina Dark Mode doesn't half-apply.
+        NSApp.appearance = NSAppearance(named: .aqua)
         buildMenu()
         let c = MainWindowController()
         mainController = c

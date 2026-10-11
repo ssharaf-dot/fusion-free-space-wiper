@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fusion Free Space Wiper 1.2 — Current UI</title>
+<style>
+  :root{
+    --blue:#0A72E8; --blue-ink:#0a5bd0; --green:#1A8A3F; --green-bg:#e7f6ec;
+    --red:#C8362F; --red-bg:#fdecea; --amber:#B9842A; --amber-bg:#fdf3d8;
+    --ink:#1d1d1f; --muted:#6b7178; --line:#e2e5ea; --line-strong:#cfd4db;
+    --panel:#ffffff; --win:#f6f7f9; --page:#eceff3;
+    --radius:14px; --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:var(--font)}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px}
+  h1.page{font-size:24px;margin:0 0 4px}
+  p.lead{color:var(--muted);margin:0 0 8px;font-size:14px;line-height:1.6}
+  .tokens{display:flex;gap:18px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:16px 0 28px;font-size:12px}
+  .tokens .sw{display:flex;align-items:center;gap:6px}
+  .tokens i{width:16px;height:16px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.1)}
+  .frame{margin:0 0 40px}
+  .frame > .cap{font-size:13px;font-weight:700;margin:0 0 8px;color:#333}
+  .frame > .cap small{font-weight:400;color:var(--muted)}
+
+  /* macOS window */
+  .win{background:var(--win);border-radius:14px;box-shadow:0 18px 44px rgba(20,30,50,.22);overflow:hidden;border:1px solid var(--line-strong)}
+  .titlebar{height:40px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#edf0f4;border-bottom:1px solid var(--line)}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .r{background:#ff5f57}.y{background:#febc2e}.g{background:#28c840}
+  .wtitle{flex:1;text-align:center;font-size:12px;color:var(--muted);font-weight:600;margin-right:52px}
+
+  /* suite tab bar */
+  .suite{display:flex;justify-content:center;gap:0;padding:8px;background:#e8ebef;border-bottom:1px solid var(--line)}
+  .seg{display:flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;background:#fff}
+  .seg button{appearance:none;border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;padding:7px 14px;color:var(--ink);cursor:default;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--blue);color:#fff}
+
+  /* guided bar */
+  .gbar{display:flex;align-items:center;gap:12px;padding:9px 16px;background:#f0f2f5;border-bottom:1px solid var(--line);font-size:12px}
+  .ghost{border:1px solid var(--line-strong);background:#fff;border-radius:8px;padding:5px 11px;font-weight:600;font-size:12px}
+  .steps{flex:1;display:flex;justify-content:center;gap:6px;align-items:center;color:var(--muted)}
+  .step{display:flex;align-items:center;gap:5px}
+  .sdot{width:18px;height:18px;border-radius:50%;background:#fff;border:1.5px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted)}
+  .step.on .sdot{background:var(--blue);border-color:var(--blue);color:#fff}.step.on{color:var(--ink);font-weight:700}
+  .step.done .sdot{background:var(--green);border-color:var(--green);color:#fff}
+  .sbar{width:16px;height:2px;background:var(--line-strong);border-radius:2px}
+
+  .body{padding:22px 24px 26px}
+  h2{font-size:21px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;line-height:1.55;margin:0 0 16px;max-width:620px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:0 0 14px;box-shadow:0 1px 2px rgba(20,30,50,.05)}
+  .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:5px 0}
+  .row .k{color:var(--muted)} .row .v{font-weight:600}
+  .chip{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .chip.blue{background:rgba(10,114,232,.12);box-shadow:inset 0 0 0 1px rgba(10,114,232,.25)}
+  .chip.green{background:var(--green-bg);box-shadow:inset 0 0 0 1px rgba(26,138,63,.3)}
+  .chip.red{background:var(--red-bg);box-shadow:inset 0 0 0 1px rgba(200,54,47,.3)}
+  .status{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .status .col .kk{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .status .col .vv{font-size:14px;font-weight:700}
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+  .b-amber{background:var(--amber-bg);color:var(--amber)} .b-green{background:var(--green-bg);color:var(--green)}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .choice{border:1.5px solid var(--line-strong);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px}
+  .choice .ttl{font-size:16px;font-weight:700;display:flex;gap:8px;align-items:center}
+  .choice .d{font-size:12px;color:var(--muted);line-height:1.5}
+  .rec{font-size:10px;font-weight:800;background:var(--green);color:#fff;padding:2px 8px;border-radius:20px}
+  .go{align-self:flex-start;font-size:13px;font-weight:700;padding:6px 12px;border-radius:20px}
+  .go.green{color:var(--green);background:rgba(26,138,63,.12)} .go.red{color:var(--red);background:rgba(200,54,47,.12)}
+  .opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line-strong);border-radius:10px;padding:12px 14px;margin-bottom:9px}
+  .opt.sel{border-color:var(--blue);background:rgba(10,114,232,.06)}
+  .radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-strong);margin-top:2px;position:relative;flex:0 0 auto}
+  .opt.sel .radio{border-color:var(--blue)} .opt.sel .radio::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--blue)}
+  .opt .ot{font-weight:600;font-size:13.5px} .opt .od{font-size:11.5px;color:var(--muted)}
+  .btn{display:inline-block;font-size:14px;font-weight:700;padding:10px 20px;border-radius:10px;color:#fff}
+  .btn.blue{background:var(--blue)} .btn.green{background:var(--green)} .btn.red{background:var(--red)}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line-strong)}
+  .btnrow{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .field{display:inline-flex;align-items:center;gap:8px;font-size:13px}
+  .field input{border:1.5px solid var(--line-strong);border-radius:8px;padding:7px 10px;font:inherit;width:220px;background:#fff}
+  /* dashboard */
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;margin:4px 0 6px}
+  .hero .lab{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .hero .pct{font-size:56px;font-weight:800;line-height:1}
+  .hero .eta{font-size:40px;font-weight:800;line-height:1;text-align:right}
+  .stage{color:var(--blue);font-weight:700;font-size:13px;margin:2px 0 6px}
+  .blockmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(15px,1fr));gap:4px;margin:8px 0}
+  .cell{aspect-ratio:1/1;border-radius:3px;background:#dfe3e8}
+  .cell.done{background:var(--blue)} .cell.rsv{background:repeating-linear-gradient(45deg,var(--amber-bg),var(--amber-bg) 3px,transparent 3px,transparent 6px);box-shadow:inset 0 0 0 1px rgba(185,132,42,.5)}
+  .cell.red{background:var(--red)}
+  .legend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin:2px 0 12px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+  .stats3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .stat{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#fff}
+  .stat .kk{font-size:10px;color:var(--muted);text-transform:uppercase} .stat .vv{font-size:17px;font-weight:700}
+  .big-result{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+  .mark{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px}
+  .mark.green{background:var(--green-bg);color:var(--green)} .mark.amber{background:var(--amber-bg);color:var(--amber)}
+  .note{font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:8px;padding:10px 12px;margin-top:10px;line-height:1.5}
+  .about{width:360px;margin:0 auto;background:var(--win);border:1px solid var(--line-strong);border-radius:14px;padding:24px;text-align:center}
+  .about .ic{width:76px;height:76px;border-radius:18px;margin:0 auto 10px;background:linear-gradient(160deg,#eef2f7,#d8dee7);display:flex;align-items:center;justify-content:center;font-size:40px;border:1px solid var(--line-strong)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="page">Fusion Free Space Wiper 1.2 — Current Interface</h1>
+  <p class="lead">A faithful HTML snapshot of every screen in the shipping app, for redesign. Native AppKit app (macOS 10.15+, Intel). Three top-level tools in one window: <b>① Fusion (Wipe) · ② PhotoRec (Audit) · ③ TestDisk (Recover)</b>. Replace the tokens below with your new system; the structure/flow is what matters.</p>
+  <div class="tokens">
+    <span class="sw"><i style="background:#0A72E8"></i>Blue / primary #0A72E8</span>
+    <span class="sw"><i style="background:#1A8A3F"></i>Green / safe #1A8A3F</span>
+    <span class="sw"><i style="background:#C8362F"></i>Red / destructive #C8362F</span>
+    <span class="sw"><i style="background:#B9842A"></i>Amber / caution #B9842A</span>
+    <span class="sw">Font: system (SF Pro). Radius: 10–16px. Icons: emoji (no SF Symbols on Catalina).</span>
+  </div>
+
+  <!-- 1. HOME (Fusion) -->
+  <div class="frame">
+    <div class="cap">1 · Home — the 360° landing <small>(Fusion tab, opens here every launch)</small></div>
+    <div class="win">
+      <div class="titlebar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="wtitle">Fusion Free Space Wiper</span></div>
+      <div class="suite"><div class="seg"><button class="on">① Fusion — Wipe</button><button>② PhotoRec — Audit</button><button>③ TestDisk — Recover</button></div></div>
+      <div class="gbar"><span class="ghost">Home</span><span class="steps"></span><span class="ghost">Advanced</span></div>
+      <div class="body">
+        <div class="card" style="border-left:3px solid var(--blue)"><b style="font-size:13px">A full 360° view of your data</b><div style="font-size:12px;color:var(--muted);margin-top:4px">①&nbsp;Fusion wipes free space clean&nbsp;·&nbsp;②&nbsp;PhotoRec audits what's still recoverable&nbsp;·&nbsp;③&nbsp;TestDisk recovers partitions. Switch tools with the tabs at the top.</div></div>
+        <h2>What would you like to do?</h2>
+        <p class="sub">This tool overwrites the empty space on a disk so previously-deleted files are harder to recover — without touching any of your current files. Start with a quick test.</p>
+        <div class="card"><div class="status"><div class="chip blue">💽</div><div class="col"><div class="kk">Disk</div><div class="vv">Macintosh HD</div></div><div class="col"><div class="kk">Free space</div><div class="vv">438 GB</div></div><div class="col"><div class="kk">Safety test</div><div class="vv"><span class="badge b-amber">● Not tested yet</span></div></div><span style="margin-left:auto" class="ghost">Change disk</span></div></div>
+        <div class="choices">
+          <div class="choice"><div class="chip green">🧪</div><div class="ttl">Run a Safety Test <span class="rec">RECOMMENDED</span></div><div class="d">Writes a small, capped amount of data (100 MB / 1 GB / 10 GB) using the real engine, then deletes it. Proves everything works before a full wipe. About 30 seconds.</div><span class="go green">Start test →</span></div>
+          <div class="choice"><div class="chip red">🧹</div><div class="ttl">Wipe Free Space</div><div class="d">Overwrites all free space except a safety reserve. Your existing files, apps and macOS are left untouched.</div><span style="font-size:11px;color:var(--amber)">🔒 Safety test recommended first</span><span class="go red">Set up wipe →</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Test size -->
+  <div class="frame">
+    <div class="cap">2 · Test — choose size <small>(step 1 of 4)</small></div>
+    <div class="win">
+      <div class="gbar"><span class="ghost">Home</span><span class="steps"><span class="step on"><span class="sdot">1</span>Size</span><span class="sbar"></span><span class="step"><span class="sdot">2</span>Confirm</span><span class="sbar"></span><span class="step"><span class="sdot">3</span>Run</span><span class="sbar"></span><span class="step"><span class="sdot">4</span>Result</span></span><span class="ghost">Advanced</span></div>
+      <div class="body">
+        <h2>Choose a test size</h2>
+        <p class="sub">Bigger tests exercise the engine longer and give a better read on write speed. Start with 100 MB.</p>
+        <div class="opt sel"><div class="radio"></div><div><div class="ot">100 MB — Quick Test&nbsp; ★ recommended</div><div class="od">Fastest check that writing, progress and cleanup all work. ~30 seconds.</div></div></div>
+        <div class="opt"><div class="radio"></div><div><div class="ot">1 GB — Standard Test</div><div class="od">A longer run for a more meaningful speed and time estimate.</div></div></div>
+        <div class="opt"><div class="radio"></div><div><div class="ot">10 GB — Extended Test</div><div class="od">Optional final rehearsal before a full wipe. Same code path, stopped at 10 GB.</div></div></div>
+        <div class="btnrow"><span class="btn ghost">Back</span><span class="btn blue">Continue</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Running dashboard -->
+  <div class="frame">
+    <div class="cap">3 · Running dashboard <small>(shared by Test &amp; Wipe — the hero screen; % + time are large)</small></div>
+    <div class="win">
+      <div class="gbar"><span class="ghost">Home</span><span class="steps"><span class="step done"><span class="sdot">✓</span>Options</span><span class="sbar"></span><span class="step done"><span class="sdot">✓</span>Checklist</span><span class="sbar"></span><span class="step done"><span class="sdot">✓</span>Confirm</span><span class="sbar"></span><span class="step on"><span class="sdot">4</span>Run</span><span class="sbar"></span><span class="step"><span class="sdot">5</span>Result</span></span><span class="ghost">Advanced</span></div>
+      <div class="body">
+        <div style="font-size:20px;font-weight:800;color:var(--red)">🧹 WIPING FREE SPACE</div>
+        <div class="stage">⟳ Overwriting free space…</div>
+        <div class="hero"><div><div class="lab">Progress</div><div class="pct">38%</div></div><div><div class="lab">Time remaining</div><div class="eta">00:42:10</div></div></div>
+        <div style="font-size:12px;color:var(--muted)">151 GB of ~395 GB free space overwritten · 287 GB free remaining</div>
+        <div class="blockmap" id="bm"></div>
+        <div class="legend"><span><i style="background:var(--red)"></i>Overwritten</span><span><i style="background:#dfe3e8"></i>Pending</span><span><i style="background:var(--amber)"></i>Reserve (kept free)</span></div>
+        <div class="stats3"><div class="stat"><div class="kk">Written</div><div class="vv">151 GB</div></div><div class="stat"><div class="kk">Current speed</div><div class="vv">96 MB/s</div></div><div class="stat"><div class="kk">Elapsed</div><div class="vv">00:26:01</div></div></div>
+        <div class="btnrow"><span class="btn ghost">Pause</span><span class="btn ghost">Resume</span><span class="btn red">Stop</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Result -->
+  <div class="frame">
+    <div class="cap">4 · Result <small>(Test shown; Wipe result is analogous)</small></div>
+    <div class="win"><div class="body">
+      <div class="big-result"><div class="mark green">✓</div><div style="font-size:22px;font-weight:800;color:var(--green)">100 MB TEST PASSED</div></div>
+      <div class="card"><div class="row"><span class="k">Target write</span><span class="v">100.0 MB</span></div><div class="row"><span class="k">Actual payload written</span><span class="v">100.0 MB</span></div><div class="row"><span class="k">Flush completed</span><span class="v">Yes</span></div><div class="row"><span class="k">Temporary files removed</span><span class="v">Yes</span></div><div class="row"><span class="k">Cleanup verified</span><span class="v">Yes</span></div><div class="row"><span class="k">Average write speed</span><span class="v">121 MB/s</span></div><div class="row"><span class="k">Your files modified</span><span class="v">No</span></div></div>
+      <div class="btnrow"><span class="btn ghost">Back to Home</span><span class="btn ghost">Run 1 GB Test</span><span class="btn blue">Proceed to Wipe →</span></div>
+    </div></div>
+  </div>
+
+  <!-- 5. Wipe options -->
+  <div class="frame">
+    <div class="cap">5 · Wipe — options &amp; reserve <small>(step 1 of 5)</small></div>
+    <div class="win"><div class="body">
+      <h2>Wipe options</h2>
+      <p class="sub">A single zero pass is the sensible default. More passes add time and disk wear with no guarantee on SSD/Fusion.</p>
+      <div class="opt sel"><div class="radio"></div><div><div class="ot">Single pass — zeros (0x00)</div><div class="od">Fast, low wear. Fills free space once with zeros. (Default)</div></div></div>
+      <div class="opt"><div class="radio"></div><div><div class="ot">Single pass — pseudorandom</div><div class="od">Avoids any chance the filesystem skips writing zero blocks.</div></div></div>
+      <div class="opt"><div class="radio"></div><div><div class="ot">Three passes (advanced)</div><div class="od">Zeros, then ones, then random. More time &amp; wear, no extra guarantee.</div></div></div>
+      <div class="field" style="margin:6px 0">Keep this much free (safety reserve): <input value="43"> GiB</div>
+      <p class="sub" style="font-size:11px">Recommended 43 GiB. Never below 10 GiB. The app re-checks space before every chunk and never fills the disk.</p>
+      <div class="btnrow"><span class="btn ghost">Back</span><span class="btn blue">Continue</span></div>
+    </div></div>
+  </div>
+
+  <!-- 6. Wipe confirm -->
+  <div class="frame">
+    <div class="cap">6 · Wipe — typed confirmation <small>(step 3 of 5)</small></div>
+    <div class="win"><div class="body">
+      <h2>Confirm the wipe</h2>
+      <p class="sub">This overwrites all free space on Macintosh HD except your 43 GiB reserve, then cleans up. To be safe, type the disk name to continue.</p>
+      <div class="field">Type “Macintosh HD”: <input placeholder="Macintosh HD"></div>
+      <div class="note" style="border-left-color:var(--red)">⚠ APFS snapshots detected. They can retain pieces of deleted files and are not removed by this app, so the wipe may be incomplete.</div>
+      <div class="btnrow"><span class="btn ghost">Back</span><span class="btn red">Overwrite Free Space</span></div>
+    </div></div>
+  </div>
+
+  <!-- 7. PhotoRec audit -->
+  <div class="frame">
+    <div class="cap">7 · PhotoRec — Audit <small>(tab ②)</small></div>
+    <div class="win">
+      <div class="suite"><div class="seg"><button>① Fusion — Wipe</button><button class="on">② PhotoRec — Audit</button><button>③ TestDisk — Recover</button></div></div>
+      <div class="body">
+        <h2>PhotoRec — Audit what's recoverable</h2>
+        <p class="sub">Runs the bundled PhotoRec (the standard open-source recovery engine) READ-ONLY against a disk, and reconstructs any files it can find into a destination you choose — exactly what someone attempting recovery would get. It reports types and counts; it never modifies the source disk.</p>
+        <div class="note">Honest limits: this reads host-accessible space only. SSD/Fusion controllers keep hidden cells no software can read, so a clean result is NOT proof nothing is recoverable. A whole-disk scan can take a long time and will ask for your administrator password.</div>
+        <div style="margin-top:12px;font-weight:700;font-size:13px">Source: Macintosh HD — /</div>
+        <div class="btnrow"><span class="btn ghost">Change disk</span><span class="btn ghost">Audit a disk image…</span></div>
+        <div class="btnrow"><span class="btn ghost">Choose where to save recovered files…</span></div>
+        <div style="font-size:12px;color:var(--amber);margin:6px 0">Save to: (choose a destination — must NOT be the source disk)</div>
+        <div class="btnrow"><span class="btn green">Start Audit</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. PhotoRec result -->
+  <div class="frame">
+    <div class="cap">8 · PhotoRec — audit result</div>
+    <div class="win"><div class="body">
+      <div style="font-size:18px;font-weight:800;color:var(--red)">47 recoverable file(s) found</div>
+      <div style="font-size:12px;color:var(--muted);margin:2px 0 10px">Recovered to: /Volumes/Backup/recovered · 128 MB</div>
+      <div class="card"><b style="font-size:12px">By type:</b><div style="font-size:12px;columns:2;margin-top:4px">jpg — 22<br>pdf — 9<br>sqlite — 6<br>docx — 4<br>png — 3<br>mov — 3</div></div>
+      <div class="note">These are files a recovery tool could reconstruct. Review them in the destination folder. To reduce this, run a Fusion free-space wipe, or for guarantees use FileVault / full erase.</div>
+    </div></div>
+  </div>
+
+  <!-- 9. TestDisk -->
+  <div class="frame">
+    <div class="cap">9 · TestDisk — Recover <small>(tab ③)</small></div>
+    <div class="win">
+      <div class="suite"><div class="seg"><button>① Fusion — Wipe</button><button>② PhotoRec — Audit</button><button class="on">③ TestDisk — Recover</button></div></div>
+      <div class="body">
+        <h2>TestDisk — Recover partitions</h2>
+        <p class="sub">Runs the bundled TestDisk (same project as PhotoRec) to analyse a disk's partitions READ-ONLY. For hands-on partition repair / undelete, launch the full interactive TestDisk in Terminal — it's a guided, keyboard-driven tool.</p>
+        <div style="font-weight:700;font-size:13px">Disk: Macintosh HD — /</div>
+        <div class="btnrow"><span class="btn ghost">Change disk</span></div>
+        <div class="btnrow"><span class="btn blue">Analyze partitions (read-only)</span><span class="btn ghost">Open advanced recovery in Terminal…</span></div>
+        <div class="card" style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#333;margin-top:12px">Disk /dev/rdisk0 - 1000 GB / 931 GiB<br>&nbsp;&nbsp;&nbsp;Partition&nbsp;&nbsp;&nbsp;&nbsp;Start&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End&nbsp;&nbsp;&nbsp;&nbsp;Size in sectors<br>&nbsp;1 P EFI System&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;40&nbsp;&nbsp;&nbsp;&nbsp;409639&nbsp;&nbsp;&nbsp;&nbsp;409600<br>&nbsp;2 P Apple APFS&nbsp;&nbsp;&nbsp;409640 1953124999 1952715360</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. Advanced -->
+  <div class="frame">
+    <div class="cap">10 · Advanced <small>(Fusion tab → Advanced)</small></div>
+    <div class="win"><div class="body">
+      <h2>Advanced</h2>
+      <p class="sub">The occasional-use extras, kept off the main path.</p>
+      <div class="card" style="display:flex;gap:12px;align-items:center"><div class="chip blue" style="width:38px;height:38px;font-size:18px">📄</div><div><b style="font-size:13px">Save report</b><div style="font-size:11px;color:var(--muted)">Save the JSON / HTML report of the last operation.</div></div></div>
+      <div class="card" style="display:flex;gap:12px;align-items:center"><div class="chip blue" style="width:38px;height:38px;font-size:18px">🔍</div><div><b style="font-size:13px">Diagnostics &amp; recovery check</b><div style="font-size:11px;color:var(--muted)">Snapshots, encryption, free-vs-available gap, logical read-back verification.</div></div></div>
+      <div class="card" style="display:flex;gap:12px;align-items:center"><div class="chip blue" style="width:38px;height:38px;font-size:18px">🧯</div><div><b style="font-size:13px">Clean up leftover files</b><div style="font-size:11px;color:var(--muted)">Find and remove any app-owned files from an interrupted run.</div></div></div>
+      <div class="card" style="display:flex;gap:12px;align-items:center"><div class="chip blue" style="width:38px;height:38px;font-size:18px">⚡️</div><div><b style="font-size:13px">Open Energy settings</b><div style="font-size:11px;color:var(--muted)">Open macOS energy/battery settings so you can adjust sleep yourself.</div></div></div>
+    </div></div>
+  </div>
+
+  <!-- 11. About -->
+  <div class="frame">
+    <div class="cap">11 · About / Credits</div>
+    <div class="about">
+      <div class="ic">💽</div>
+      <div style="font-size:19px;font-weight:700">Fusion Free Space Wiper</div>
+      <div style="font-size:12px;color:var(--muted);margin:3px 0 12px">Version 1.2.0 — Intel · macOS 10.15+</div>
+      <div class="card" style="text-align:left;font-size:12px"><div class="row"><span class="k">Developed by</span><span class="v">Sunaz Sharaf</span></div><div class="row"><span class="k">Recovery engine</span><span class="v">PhotoRec &amp; TestDisk © CGSecurity (GPL)</span></div><div class="row"><span class="k">Privacy</span><span class="v">No network · Local only</span></div><div class="row"><span class="k">Source</span><span class="v">github.com/ssharaf-dot/…</span></div></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px">© 2026 Sunaz Sharaf · GNU GPL v2 or later</div>
+    </div>
+  </div>
+
+</div>
+<script>
+  // render the demo block map
+  const bm=document.getElementById('bm'); if(bm){const total=210,done=72,rsv=20;for(let i=0;i<total;i++){const c=document.createElement('div');c.className='cell';if(i>=total-rsv)c.className='cell rsv';else if(i<done)c.className='cell red';bm.appendChild(c);}}
+</script>
+</body>
+</html>

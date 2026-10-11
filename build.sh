@@ -17,7 +17,7 @@ cd "$(dirname "$0")"
 ROOT="$(pwd)"
 APP_NAME="FusionFreeSpaceWiper"
 DISPLAY_NAME="Fusion Free Space Wiper"
-VERSION="1.2.0"
+VERSION="2.0.0"
 ARCH_TARGET="x86_64-apple-macosx10.15"
 
 BUILD_DIR="$ROOT/build"

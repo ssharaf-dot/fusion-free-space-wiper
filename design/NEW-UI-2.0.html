@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fusion Free Space Wiper 2.0 — New UI</title>
+<style>
+  :root{
+    --green:#00ED64;--greenDark:#00684A;--greenSoft:#C3F0D2;--feature:#E3FCEF;
+    --ink:#001E2B;--teal:#003D4F;--hairDark:#1C2D38;--slate:#3D4F5B;--steel:#5C6C7A;
+    --onDark:#A8B3BC;--hair:#E1E5E8;--hairStrong:#C1CCD6;--surface:#F9FBFA;--surfaceSoft:#F4F7F6;
+    --warnBg:#FFF8E0;--warnText:#946F3F;--orange:#FA6E39;--orangeDark:#B4441A;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#eceff3;color:var(--ink);font-family:var(--font)}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 18px 80px}
+  h1.pg{font-size:23px;margin:0 0 2px}.lead{color:var(--steel);font-size:14px;margin:0 0 22px}
+  .cap{font-size:13px;font-weight:700;margin:26px 0 8px}.cap small{font-weight:400;color:var(--steel)}
+  .win{background:#fff;border-radius:12px;box-shadow:0 16px 40px rgba(20,30,50,.2);overflow:hidden;border:1px solid var(--hairStrong)}
+  .tbar{height:38px;display:flex;align-items:center;gap:8px;padding:0 13px;background:var(--surfaceSoft);border-bottom:1px solid var(--hair)}
+  .d{width:12px;height:12px;border-radius:50%}.r{background:#ff5f57}.y{background:#febc2e}.g{background:#28c840}
+  .tt{flex:1;text-align:center;font-size:12px;color:var(--steel);font-weight:600;margin-right:50px}
+  .app{display:flex;min-height:560px}
+  /* sidebar */
+  .side{width:256px;flex:0 0 256px;background:var(--surface);border-right:1px solid var(--hair);padding:22px 16px;display:flex;flex-direction:column}
+  .brand{font-size:18px;font-weight:800}.brandsub{font-size:12px;color:var(--steel);margin-bottom:18px}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--steel);margin:4px 0 8px}
+  .navrow{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;margin-bottom:4px}
+  .navrow.on{background:#fff;border:1px solid var(--hair)}
+  .navrow.off{opacity:.55}
+  .num{width:26px;height:26px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;background:var(--surfaceSoft);color:var(--slate)}
+  .navrow.on .num{background:var(--green);color:var(--ink)}
+  .navrow .t{font-size:14px;font-weight:600}.navrow .s{font-size:11px;color:var(--steel)}
+  .diskcard{margin-top:auto;background:#fff;border:1px solid var(--hair);border-radius:12px;padding:14px}
+  .bar{height:8px;border-radius:4px;overflow:hidden;display:flex;margin:6px 0}
+  .bar i{display:block;height:100%}.bar .f{background:var(--hairStrong)}.bar .o{background:var(--teal)}.bar .rs{background:repeating-linear-gradient(45deg,#dfe3e8,#dfe3e8 3px,transparent 3px,transparent 6px)}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px}
+  .b-soft{background:var(--greenSoft);color:var(--greenDark)}.b-warn{background:var(--warnBg);color:var(--warnText)}.b-neutral{background:var(--surface);color:var(--steel)}
+  .link{color:var(--greenDark);font-size:12px;font-weight:600;margin-top:6px;display:inline-block}
+  .foot{margin-top:14px}.foot a{display:block;color:var(--greenDark);font-size:12px;font-weight:600;margin-top:4px}
+  /* main */
+  .main{flex:1;padding:30px 40px;background:#fff;overflow:hidden}
+  .flowhdr{display:flex;align-items:center;gap:14px;margin-bottom:16px;color:var(--steel);font-size:12px}
+  .back{color:var(--greenDark);font-weight:600}
+  .steps{display:flex;align-items:center;gap:6px}
+  .sdot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#fff;border:1.5px solid var(--hairStrong);color:var(--steel)}
+  .step.on .sdot{background:var(--green);border:0;color:var(--ink)}.step.done .sdot{background:var(--greenDark);border:0;color:#fff}
+  .step.on{color:var(--ink);font-weight:700}
+  .sline{width:22px;height:2px;background:var(--hairStrong);border-radius:2px}
+  h2{font-size:30px;font-weight:500;letter-spacing:-.5px;margin:2px 0 4px}
+  h3{font-size:25px;font-weight:500;margin:2px 0 4px}
+  .intro{color:var(--slate);font-size:15px;max-width:620px;margin:0 0 18px;line-height:1.5}
+  .card{border:1px solid var(--hair);border-radius:12px;padding:20px;background:#fff}
+  .card.surface{background:var(--surface)}
+  .card.dark{background:var(--ink);border:0;color:#fff}
+  .h5{font-size:18px;font-weight:600}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .btn{display:inline-block;font-size:14px;font-weight:600;padding:11px 20px;border-radius:22px}
+  .btn.green{background:var(--green);color:var(--ink)}.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--hairStrong)}
+  .btn.orange{background:var(--orange);color:var(--ink)}.btn.dark{background:var(--ink);color:#fff}
+  .btnlink{color:var(--greenDark);font-weight:600;font-size:14px}
+  .row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}.row .k{color:var(--steel)}.row .v{font-weight:600}
+  .radio{display:flex;gap:10px;border:1.5px solid var(--hairStrong);border-radius:10px;padding:13px 14px;margin-bottom:9px}
+  .radio.sel{border:2px solid var(--greenDark);background:var(--feature)}
+  .rdot{width:16px;height:16px;border-radius:50%;border:2px solid var(--hairStrong);margin-top:2px;flex:0 0 auto}
+  .radio.sel .rdot{border:5px solid var(--greenDark)}
+  .radio .rt{font-weight:600;font-size:14px}.radio .rd{font-size:12px;color:var(--steel)}
+  .footbar{border-top:1px solid var(--hair);margin-top:22px;padding-top:16px;display:flex;justify-content:flex-end;gap:12px;align-items:center}
+  .limits{background:var(--surface);border:1px solid var(--hair);border-radius:12px;padding:14px}
+  .limits .lt{font-size:13px;font-weight:600;color:var(--slate)}.limits .lb{font-size:12px;color:var(--steel);margin-top:4px}
+  .warn{background:var(--warnBg);border:1px solid rgba(148,111,63,.25);border-radius:12px;padding:14px}
+  .warn .lt{font-size:13px;font-weight:600;color:var(--warnText)}.warn .lb{font-size:12px;color:#6E522C;margin-top:4px}
+  /* dashboard */
+  .stagepills{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:11px;color:var(--onDark)}
+  .pill.cur{background:var(--teal);border:1px solid var(--green);color:var(--green)}
+  .pill.todo{border:1px solid var(--hairDark)}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;margin:4px 0}
+  .hlab{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--onDark)}
+  .pct{font-size:72px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums;color:#fff}
+  .eta{font-size:46px;font-weight:500;font-family:ui-monospace,Menlo,monospace;color:#fff;text-align:right}
+  .dcap{color:var(--onDark);font-size:13px;margin:4px 0 10px}
+  .bmap{display:grid;grid-template-columns:repeat(40,1fr);gap:4px;margin:6px 0}
+  .cell{aspect-ratio:1/1;border-radius:2px;background:var(--hairDark)}.cell.done{background:var(--green)}.cell.rsv{background:repeating-linear-gradient(45deg,rgba(168,179,188,.25),rgba(168,179,188,.25) 2px,transparent 2px,transparent 5px)}
+  .dlegend{display:flex;gap:16px;color:var(--onDark);font-size:12px;margin-top:4px}.dlegend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+  .stats3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px}
+  .stat{border:1px solid var(--hair);border-radius:12px;padding:12px 14px}.stat .sk{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--steel)}.stat .sv{font-size:17px;font-weight:600}
+  .typebar{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:13px}.typebar .lab{width:70px;color:var(--slate)}.typebar .b{height:16px;background:var(--teal);border-radius:3px}.typebar .c{font-weight:600}
+</style></head>
+<body><div class="wrap">
+<h1 class="pg">Fusion Free Space Wiper 2.0 — implemented UI</h1>
+<p class="lead">Rendered to match the AppKit build (compiled x86_64 / macOS 10.15, 40/40 tests pass). MongoDB tokens, left sidebar, no emoji, decimal GB, dark dashboard.</p>
+
+<!-- Clean Home (full window) -->
+<div class="cap">1 · Clean — Home <small>(full window with sidebar)</small></div>
+<div class="win"><div class="tbar"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="tt">Fusion Free Space Wiper</span></div>
+<div class="app">
+  <div class="side">
+    <div class="brand">Fusion</div><div class="brandsub">Free Space Wiper</div>
+    <div class="eyebrow">Workflow</div>
+    <div class="navrow on"><div class="num">1</div><div><div class="t">Clean</div><div class="s">Overwrite free space</div></div></div>
+    <div class="navrow"><div class="num">2</div><div><div class="t">Check</div><div class="s">What's recoverable · PhotoRec</div></div></div>
+    <div class="navrow"><div class="num">3</div><div><div class="t">Recover</div><div class="s">Partitions · TestDisk</div></div></div>
+    <div class="diskcard">
+      <div class="eyebrow">Disk</div><div style="font-weight:600;font-size:14px">Macintosh HD</div>
+      <div class="bar"><i class="f" style="width:56%"></i><i class="o" style="width:36%"></i><i class="rs" style="width:8%"></i></div>
+      <div style="font-size:12px;color:var(--steel)">470 GB free of 1 TB</div>
+      <div style="margin-top:6px"><span class="badge b-warn">Not tested</span></div>
+      <a class="link">Change disk</a>
+    </div>
+    <div class="foot"><a>Reports &amp; diagnostics</a><a>Help</a></div>
+  </div>
+  <div class="main">
+    <div class="eyebrow">1 · Clean</div><h2>Wipe deleted files from free space</h2>
+    <p class="intro">Overwrite the empty space on your disk so previously-deleted files are harder to recover. Your current files, apps and macOS are never touched.</p>
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      <div class="card dark" style="flex:1">
+        <div class="h5">Recommended next step: run a 100 MB safety test</div>
+        <div style="color:var(--onDark);font-size:13px;margin:6px 0 14px">It exercises the real engine for ~30 seconds so you can trust a full wipe.</div>
+        <span class="btn green">Start safety test</span> &nbsp; <span class="btnlink" style="color:#fff">Choose test size</span>
+      </div>
+      <div class="card surface" style="width:260px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:8px">The safe path</div>
+        <div style="font-size:13px;color:var(--steel);line-height:1.9">○ 100 MB test<br>○ Optional 1 GB / 10 GB<br>○ Wipe free space<br>○ Check again</div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card"><div style="display:flex;gap:8px;align-items:center"><span class="h5">Wipe free space</span><span class="badge b-warn">Run the safety test first</span></div><div style="font-size:13px;color:var(--steel);margin:6px 0 10px">Overwrite all free space except a safety reserve.</div><span class="btn sec">Set up wipe</span></div>
+      <div class="card"><div class="h5">Not sure what's recoverable?</div><div style="font-size:13px;color:var(--steel);margin:6px 0 10px">Scan a disk to see what a recovery tool could still find.</div><span class="btn sec">Go to Check</span></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- Dashboard -->
+<div class="cap">2 · Running dashboard <small>(dark readout — the hero screen)</small></div>
+<div class="win"><div class="main" style="background:#fff">
+  <div class="flowhdr"><span class="steps"><span class="step done"><span class="sdot">✓</span></span><span class="sline"></span><span class="step done"><span class="sdot">✓</span></span><span class="sline"></span><span class="step on"><span class="sdot">3</span> Run</span><span class="sline"></span><span class="step"><span class="sdot">4</span> Result</span></span></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px"><div><div class="eyebrow">Step 3 of 4 · Run</div><h3>Wiping free space on Macintosh HD</h3></div><div><span class="btn sec">Pause</span> &nbsp; <span style="color:var(--orangeDark);font-weight:600">Stop &amp; clean up</span></div></div>
+  <div class="card dark">
+    <div class="stagepills"><span class="pill">Preflight · done</span><span class="pill cur">Overwriting</span><span class="pill todo">Flush</span><span class="pill todo">Verify</span><span class="pill todo">Clean up</span></div>
+    <div class="hero"><div><div class="hlab">Progress</div><div class="pct">38%</div></div><div><div class="hlab">Time remaining</div><div class="eta">00:42:10</div></div></div>
+    <div class="dcap">151 GB of ~395 GB overwritten · 287 GB free remaining</div>
+    <div class="bmap" id="bm"></div>
+    <div class="dlegend"><span><i style="background:var(--green)"></i>Overwritten</span><span><i style="background:var(--hairDark)"></i>To do</span><span><i style="background:var(--onDark)"></i>Reserve</span></div>
+    <div style="color:var(--onDark);font-size:12px;margin-top:6px">Each tile ≈ a slice of free space, not a physical location.</div>
+  </div>
+  <div class="stats3"><div class="stat"><div class="sk">Current speed</div><div class="sv">96 MB/s</div></div><div class="stat"><div class="sk">Elapsed</div><div class="sv">00:26:01</div></div><div class="stat"><div class="sk">Your files</div><div class="sv" style="color:var(--greenDark)">Untouched</div></div></div>
+</div></div>
+
+<!-- Test size -->
+<div class="cap">3 · Safety test — choose size</div>
+<div class="win"><div class="main">
+  <div class="flowhdr"><span class="back">← Clean</span><span class="steps"><span class="step on"><span class="sdot">1</span> Choose size</span><span class="sline"></span><span class="step"><span class="sdot">2</span> Run</span><span class="sline"></span><span class="step"><span class="sdot">3</span> Result</span></span></div>
+  <div class="eyebrow">1 · Clean</div><h3>Choose a safety test size</h3>
+  <p class="intro">Bigger tests exercise the engine longer and give a better read on write speed. Start with 100 MB.</p>
+  <div style="display:flex;gap:20px;align-items:flex-start">
+    <div style="flex:1">
+      <div class="radio sel"><div class="rdot"></div><div><div class="rt">100 MB · Quick test &nbsp;<span class="badge b-soft">Recommended</span></div><div class="rd">Fastest check that writing, progress and cleanup all work. ~30 sec.</div></div></div>
+      <div class="radio"><div class="rdot"></div><div><div class="rt">1 GB · Standard</div><div class="rd">A longer run for a more meaningful speed and time estimate.</div></div></div>
+      <div class="radio"><div class="rdot"></div><div><div class="rt">10 GB · Extended</div><div class="rd">Optional final rehearsal before a full wipe.</div></div></div>
+    </div>
+    <div class="card surface" style="width:300px"><div class="h5">What will happen</div><div style="font-size:13px;color:var(--slate);line-height:1.9;margin-top:6px">1. Write a small amount of temporary data.<br>2. Flush it and verify the exact amount.<br>3. Delete it and confirm space is returned.</div><div style="color:var(--greenDark);font-weight:600;font-size:13px;margin-top:8px">Your files are not modified.</div></div>
+  </div>
+  <div class="footbar"><span class="btn sec">Back</span><span class="btn green">Run 100 MB test</span></div>
+</div></div>
+
+<!-- Wipe confirm -->
+<div class="cap">4 · Wipe — confirm</div>
+<div class="win"><div class="main">
+  <div class="flowhdr"><span class="back">← Options</span><span class="steps"><span class="step done"><span class="sdot">✓</span> Options</span><span class="sline"></span><span class="step on"><span class="sdot">2</span> Confirm</span><span class="sline"></span><span class="step"><span class="sdot">3</span> Run</span><span class="sline"></span><span class="step"><span class="sdot">4</span> Result</span></span></div>
+  <div class="eyebrow">1 · Clean</div><h3>Confirm the wipe</h3>
+  <div class="grid2" style="margin-top:8px">
+    <div class="card"><div class="h5">Before you start</div><div style="font-size:13px;line-height:2;margin-top:6px">☑ I have a current backup.<br>☑ The Mac is plugged into power.<br>☐ No Time Machine or disk-heavy task is running.<br>☐ I understand this is not a certified erase.</div>
+      <div class="warn" style="margin-top:10px"><div class="lt">APFS snapshots detected</div><div class="lb">They can retain pieces of deleted files and are not removed by this app.</div></div>
+      <div style="font-weight:600;font-size:13px;margin-top:12px">Type “Macintosh HD” to confirm</div>
+      <div style="border:1.5px solid var(--hairStrong);border-radius:8px;padding:8px 10px;width:240px;margin-top:6px;color:var(--steel)">Macintosh HD</div>
+    </div>
+    <div class="card surface"><div class="h5">Summary</div>
+      <div class="row"><span class="k">Disk</span><span class="v">Macintosh HD</span></div>
+      <div class="row"><span class="k">Method</span><span class="v">One pass · zeros</span></div>
+      <div class="row"><span class="k">Overwrite size</span><span class="v">427 GB</span></div>
+      <div class="row"><span class="k">Reserve</span><span class="v">43 GB</span></div>
+      <div class="row"><span class="k">Estimated time</span><span class="v">~55 min</span></div>
+    </div>
+  </div>
+  <div class="footbar"><span class="btn sec">Back</span><span class="btn orange">Overwrite free space</span></div>
+</div></div>
+
+<!-- Check result -->
+<div class="cap">5 · Check — audit result</div>
+<div class="win"><div class="main">
+  <div class="eyebrow">2 · Check</div><h2>See what's still recoverable</h2>
+  <div style="display:flex;align-items:center;gap:18px;margin:8px 0 16px"><div style="font-size:72px;font-weight:500;color:var(--orangeDark);font-variant-numeric:tabular-nums">47</div><div><div class="h5">recoverable files found</div><div style="font-size:13px;color:var(--steel)">Recovered to: /Volumes/Backup/recovered · 128 MB</div></div></div>
+  <div style="font-weight:600;font-size:13px;color:var(--slate);margin-bottom:6px">By file type</div>
+  <div class="typebar"><span class="lab">jpg</span><span class="b" style="width:260px"></span><span class="c">22</span></div>
+  <div class="typebar"><span class="lab">pdf</span><span class="b" style="width:106px"></span><span class="c">9</span></div>
+  <div class="typebar"><span class="lab">sqlite</span><span class="b" style="width:70px"></span><span class="c">6</span></div>
+  <div class="typebar"><span class="lab">docx</span><span class="b" style="width:47px"></span><span class="c">4</span></div>
+  <div class="limits" style="margin-top:14px"><div class="lt">Keep in mind</div><div class="lb">These are files a recovery tool could reconstruct. Run a wipe, or use FileVault / full erase for guarantees.</div></div>
+</div></div>
+
+<!-- Recover -->
+<div class="cap">6 · Recover — TestDisk</div>
+<div class="win"><div class="main">
+  <div class="eyebrow">3 · Recover</div><h2>Analyse and recover partitions</h2>
+  <p class="intro">Runs the bundled TestDisk to analyse a disk's partitions read-only. For hands-on repair, launch the interactive tool in Terminal.</p>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span class="btn green">Analyse partitions</span><span class="badge b-soft">Read-only</span><span style="margin-left:auto;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--steel)">/dev/rdisk0</span></div>
+  <div class="card dark" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#fff;line-height:1.7">Disk /dev/rdisk0 - 1000 GB / 931 GiB<br>&nbsp;# Partition&nbsp;&nbsp;&nbsp;&nbsp;Start&nbsp;&nbsp;&nbsp;&nbsp;End&nbsp;&nbsp;&nbsp;&nbsp;Sectors<br>&nbsp;1 EFI System&nbsp;&nbsp;&nbsp;&nbsp;40&nbsp;&nbsp;409639&nbsp;&nbsp;409600<br>&nbsp;2 Apple APFS&nbsp;409640 1953124999 1952715360</div>
+  <div class="card surface" style="margin-top:14px"><div class="h5">Need hands-on recovery?</div><div style="font-family:ui-monospace,Menlo,monospace;font-size:12px;margin:8px 0">sudo testdisk /dev/rdisk0</div><span class="btn sec">Open in Terminal…</span></div>
+</div></div>
+
+</div>
+<script>const bm=document.getElementById('bm');if(bm){const T=240,done=92,rsv=20;for(let i=0;i<T;i++){const c=document.createElement('div');c.className='cell';if(i>=T-rsv)c.className='cell rsv';else if(i<done)c.className='cell done';bm.appendChild(c);}}</script>
+</body></html>
