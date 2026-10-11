@@ -1,9 +1,8 @@
 <div align="center">
 
-# Fusion Free Space Wiper
+<img src="design/banner.png" alt="Fusion Free Space Wiper — Clean · Check · Recover" width="100%">
 
-**Clean. Check. Recover.** — an honest, self‑contained disk toolkit for older Intel &
-Fusion‑Drive Macs.
+<br><br>
 
 [![Latest release](https://img.shields.io/github/v/release/ssharaf-dot/fusion-free-space-wiper?label=latest&color=00684A)](https://github.com/ssharaf-dot/fusion-free-space-wiper/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/ssharaf-dot/fusion-free-space-wiper/total?color=00684A)](https://github.com/ssharaf-dot/fusion-free-space-wiper/releases)
